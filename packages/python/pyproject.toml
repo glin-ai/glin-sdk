@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "glin-sdk"
-version = "0.1.0"
+version = "0.3.0"
 description = "Official Python SDK for GLIN AI Training Network"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -42,3 +42,15 @@ Homepage = "https://glin.ai"
 Documentation = "https://docs.glin.ai/sdk/python"
 Repository = "https://github.com/glin-ai/glin-sdk"
 "Bug Tracker" = "https://github.com/glin-ai/glin-sdk/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["glin_sdk", "tests"]
+asyncio_mode = "auto"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311"]

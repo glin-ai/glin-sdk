@@ -1,0 +1,2 @@
+glin-sdk>=0.3.0
+substrate-interface>=1.7.0

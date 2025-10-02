@@ -13,6 +13,7 @@ npm install @glin-ai/sdk
 - ✅ Browser extension detection
 - ✅ "Sign in with GLIN" authentication
 - ✅ Blockchain client (Polkadot.js)
+- ✅ Smart contract interactions
 - ✅ Full TypeScript support
 
 **[📚 JS/TS Documentation](./packages/js/)**
@@ -23,6 +24,7 @@ pip install glin-sdk
 ```
 - ✅ Blockchain client (substrate-interface)
 - ✅ Signature verification
+- ✅ Smart contract interactions
 - ✅ Type hints support
 - ✅ Async/await ready
 
@@ -33,6 +35,7 @@ pip install glin-sdk
 cargo add glin-sdk
 ```
 - ✅ Type-safe API (subxt)
+- ✅ Smart contract interactions
 - ✅ Zero-cost abstractions
 - ✅ Async/await (Tokio)
 - ✅ Production-ready
@@ -84,6 +87,86 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## 🔐 Smart Contracts
+
+GLIN provides three production-ready smart contracts for building decentralized applications:
+
+### **GenericEscrow** - Milestone-based Payments
+Secure payment escrow with milestone tracking and dispute resolution.
+
+```typescript
+import { GlinContracts } from '@glin-ai/sdk';
+
+const contracts = new GlinContracts({ api, signer, escrowAddress: '5Escrow...' });
+
+// Create escrow agreement
+const agreementId = await contracts.escrow.createAgreement({
+  provider: '5Provider...',
+  milestoneDescriptions: ['Design', 'Development', 'Testing'],
+  milestoneAmounts: [500n * 10n**18n, 1500n * 10n**18n, 1000n * 10n**18n],
+  milestoneDeadlines: [deadline1, deadline2, deadline3],
+  disputeTimeout: finalDeadline,
+  value: 3000n * 10n**18n
+});
+```
+
+### **ProfessionalRegistry** - Reputation System
+On-chain professional registration with reputation scoring.
+
+```python
+from glin_sdk.contracts import GlinContracts, RegisterProfessionalParams, ProfessionalRole
+
+contracts = GlinContracts(substrate, registry_address="5Registry...")
+
+# Register as professional
+await contracts.registry.register(RegisterProfessionalParams(
+    role=ProfessionalRole.LAWYER,
+    metadata_uri="ipfs://QmXYZ.../profile.json",
+    stake_amount="100000000000000000000"
+))
+
+# Submit review
+await contracts.registry.submit_review(SubmitReviewParams(
+    professional="5Professional...",
+    rating=5,
+    comment="Excellent service!"
+))
+```
+
+### **ArbitrationDAO** - Dispute Resolution
+Decentralized dispute resolution through stake-weighted voting.
+
+```rust
+use glin_sdk::contracts::{GlinContracts, CreateDisputeParams, VoteChoice};
+
+let contracts = GlinContracts::new("wss://rpc.glin.ai", ...).await?;
+
+// Create dispute
+let dispute_id = contracts.arbitration.create_dispute(
+    CreateDisputeParams {
+        defendant: defendant_addr,
+        description: "Service not delivered".into(),
+        evidence_uri: "ipfs://evidence".into(),
+    },
+    &keypair
+).await?;
+
+// Vote on dispute
+contracts.arbitration.vote(
+    VoteParams { dispute_id, choice: VoteChoice::InFavorOfClaimant },
+    &keypair
+).await?;
+```
+
+**📦 Contract Repository**: https://github.com/glin-ai/glin-contracts
+
+**📚 Documentation**:
+- [Getting Started with Contracts](./docs/contracts/getting-started.md)
+- [Escrow Contract Guide](./docs/contracts/escrow.md)
+- [Registry Contract Guide](./docs/contracts/registry.md)
+- [Arbitration Contract Guide](./docs/contracts/arbitration.md)
+- [Deployment Guide](./docs/contracts/deployment.md)
+
 ## 🎯 Use Cases
 
 ### 1. Web3 Authentication
@@ -119,6 +202,10 @@ Build GPU provider applications:
 | Authentication | ✅ | ✅ | ✅ |
 | Extension Support | ✅ | ❌ | ❌ |
 | Signature Verification | ✅ | ✅ | ✅ |
+| **Smart Contracts** | ✅ | ✅ | ✅ |
+| - GenericEscrow | ✅ | ✅ | ✅ |
+| - ProfessionalRegistry | ✅ | ✅ | ✅ |
+| - ArbitrationDAO | ✅ | ✅ | ✅ |
 | Task Queries | ✅ | ✅ | 🚧 |
 | Provider Queries | ✅ | ✅ | 🚧 |
 | Event Subscriptions | ✅ | ❌ | 🚧 |

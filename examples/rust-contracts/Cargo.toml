@@ -1,0 +1,11 @@
+[package]
+name = "arbitration-example"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+glin-sdk = { path = "../../packages/rust" }
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+sp-core = "34"
+sp-keyring = "39"
