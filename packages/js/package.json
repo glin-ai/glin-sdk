@@ -1,0 +1,56 @@
+{
+  "name": "@glin-ai/sdk",
+  "version": "0.1.0",
+  "description": "Official JavaScript/TypeScript SDK for GLIN AI Training Network",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "glin",
+    "blockchain",
+    "web3",
+    "substrate",
+    "polkadot",
+    "authentication",
+    "wallet"
+  ],
+  "author": "GLIN AI",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/glin-ai/glin-sdk.git",
+    "directory": "packages/js"
+  },
+  "dependencies": {
+    "@polkadot/api": "^12.0.2",
+    "@polkadot/keyring": "^13.0.2",
+    "@polkadot/util": "^13.0.2",
+    "@polkadot/util-crypto": "^13.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "eslint": "^8.54.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}

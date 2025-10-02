@@ -1,0 +1,32 @@
+{
+  "name": "@glin-ai/sdk-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Developer SDKs for GLIN AI Training Network",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/glin-ai/glin-sdk.git"
+  },
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r exec rm -rf dist node_modules",
+    "publish:js": "pnpm --filter @glin-ai/sdk publish",
+    "publish:python": "cd packages/python && python -m build && twine upload dist/*",
+    "publish:rust": "cd packages/rust && cargo publish"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
