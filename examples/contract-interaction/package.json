@@ -9,7 +9,7 @@
     "dev": "tsx watch index.ts"
   },
   "dependencies": {
-    "@glin-ai/sdk": "^0.3.0",
+    "@glin-ai/sdk": "workspace:*",
     "@polkadot/api": "^12.0.2",
     "@polkadot/api-contract": "^12.0.2",
     "@polkadot/keyring": "^13.0.2",
