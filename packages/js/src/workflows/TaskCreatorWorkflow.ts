@@ -6,7 +6,8 @@
  */
 
 import type { ApiPromise } from '@polkadot/api'
-import type { KeyringPair } from '@polkadot/keyring/types'
+import type { SubmittableExtrinsic, SubmittableResultValue } from '@polkadot/api/types'
+import type { EventRecord } from '@polkadot/types/interfaces'
 import type {
   FederatedTask,
   CreateTaskParams,
@@ -14,12 +15,39 @@ import type {
   TrainingRound,
   TaskMonitorCallbacks
 } from '../types/federated'
+import type { GlinSigner } from '../types'
+import { isKeyringPair } from '../types'
 
 export class TaskCreatorWorkflow {
   constructor(
     private api: ApiPromise,
-    private signer?: KeyringPair
+    private signer?: GlinSigner,
+    private signerAddress?: string
   ) {}
+
+  /**
+   * Helper to sign and send transaction
+   * Handles both KeyringPair and InjectedSigner
+   */
+  private async signAndSend(
+    tx: SubmittableExtrinsic<'promise'>,
+    callback: (result: SubmittableResultValue) => void
+  ) {
+    if (!this.signer) {
+      throw new Error('Signer required')
+    }
+
+    if (isKeyringPair(this.signer)) {
+      // Direct signer (KeyringPair)
+      return tx.signAndSend(this.signer, callback)
+    } else {
+      // Extension signer (InjectedSigner)
+      if (!this.signerAddress) {
+        throw new Error('Address required for extension signer')
+      }
+      return tx.signAndSend(this.signerAddress, { signer: this.signer }, callback)
+    }
+  }
 
   /**
    * Create a new federated learning task
@@ -40,12 +68,12 @@ export class TaskCreatorWorkflow {
     )
 
     return new Promise((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const taskCreatedEvent = events.find(
-            ({ event }) =>
-              event.section === 'taskRegistry' &&
-              event.method === 'TaskCreated'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const taskCreatedEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'taskRegistry' &&
+              record.event.method === 'TaskCreated'
           )
 
           if (taskCreatedEvent) {
@@ -70,8 +98,8 @@ export class TaskCreatorWorkflow {
     const tx = this.api.tx.taskRegistry.startRecruiting(taskId)
 
     return new Promise((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status }) => {
-        if (status.isInBlock) {
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
           resolve()
         }
       }).catch(reject)
@@ -169,8 +197,8 @@ export class TaskCreatorWorkflow {
     const tx = this.api.tx.taskRegistry.completeTask(taskId)
 
     return new Promise((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status }) => {
-        if (status.isInBlock) {
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
           resolve()
         }
       }).catch(reject)
@@ -185,21 +213,22 @@ export class TaskCreatorWorkflow {
       throw new Error('Signer required to cancel task')
     }
 
-    return new Promise((resolve, reject) => {
-      this.api.tx.taskRegistry.cancelTask(taskId)
-        .signAndSend(this.signer!, ({ status, events }) => {
-          if (status.isInBlock) {
-            const cancelEvent = events.find(
-              ({ event }) =>
-                event.section === 'taskRegistry' &&
-                event.method === 'TaskCancelled'
-            )
+    const tx = this.api.tx.taskRegistry.cancelTask(taskId)
 
-            if (cancelEvent) {
-              const refundAmount = cancelEvent.event.data[1].toString()
-              resolve(BigInt(refundAmount))
-            } else {
-              reject(new Error('Task cancellation event not found'))
+    return new Promise((resolve, reject) => {
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const cancelEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'taskRegistry' &&
+              record.event.method === 'TaskCancelled'
+          )
+
+          if (cancelEvent) {
+            const refundAmount = cancelEvent.event.data[1].toString()
+            resolve(BigInt(refundAmount))
+          } else {
+            reject(new Error('Task cancellation event not found'))
             }
           }
         }).catch(reject)

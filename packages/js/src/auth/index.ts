@@ -5,7 +5,8 @@
 import { stringToU8a, u8aToHex } from '@polkadot/util';
 import { signatureVerify } from '@polkadot/util-crypto';
 import { ProviderDetector } from '../provider';
-import { GlinAccount, SignatureResult, AuthResult, GlinSDKConfig } from '../types';
+import type { GlinAccount, SignatureResult, AuthResult, GlinSDKConfig } from '../types';
+import type { GlinSigner } from '../types';
 
 export class GlinAuth {
   private config: GlinSDKConfig;
@@ -29,14 +30,25 @@ export class GlinAuth {
 
       if (extension) {
         this.extension = extension;
-        const accounts = await extension.enable();
 
-        if (accounts.length > 0) {
-          this.currentAccount = {
-            ...accounts[0],
-            source: 'extension'
-          };
-          return this.currentAccount;
+        try {
+          const accounts = await extension.enable();
+
+          if (accounts.length > 0) {
+            this.currentAccount = {
+              ...accounts[0],
+              source: 'extension'
+            };
+            return this.currentAccount;
+          }
+
+          // Extension found but no accounts
+          throw new Error(
+            'No accounts found in GLIN wallet. Please create or import an account in the extension.'
+          );
+        } catch (error) {
+          // Re-throw the actual error from the extension
+          throw error;
         }
       }
     }
@@ -103,6 +115,29 @@ export class GlinAuth {
   }
 
   /**
+   * Get signer for signing transactions
+   * Works with browser extension signers
+   * @param address - Optional address to get signer for (defaults to current account)
+   * @returns InjectedSigner that can be used with workflows
+   */
+  async getSigner(address?: string): Promise<GlinSigner> {
+    if (!this.currentAccount) {
+      throw new Error('Not connected. Call connect() first.');
+    }
+
+    const signerAddress = address || this.currentAccount.address;
+
+    if (this.currentAccount.source === 'extension') {
+      // Get signer from polkadot extension
+      const { web3FromAddress } = await import('@polkadot/extension-dapp');
+      const injector = await web3FromAddress(signerAddress);
+      return injector.signer;
+    }
+
+    throw new Error('No signer available for current account source');
+  }
+
+  /**
    * Disconnect wallet
    */
   disconnect(): void {
@@ -138,7 +173,7 @@ export class GlinAuth {
    * Listen to account changes
    */
   onAccountsChanged(callback: (accounts: GlinAccount[]) => void): void {
-    if (this.extension) {
+    if (this.extension && typeof this.extension.on === 'function') {
       this.extension.on('accountsChanged', callback);
     }
   }
@@ -147,7 +182,7 @@ export class GlinAuth {
    * Listen to disconnection
    */
   onDisconnect(callback: () => void): void {
-    if (this.extension) {
+    if (this.extension && typeof this.extension.on === 'function') {
       this.extension.on('disconnect', callback);
     }
   }

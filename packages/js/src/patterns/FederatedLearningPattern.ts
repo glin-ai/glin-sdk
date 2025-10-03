@@ -1,8 +1,9 @@
-import { ApiPromise } from '@polkadot/api';
-import type { KeyringPair } from '@polkadot/keyring/types';
+import type { ApiPromise } from '@polkadot/api';
 import { TaskCreatorWorkflow } from '../workflows/TaskCreatorWorkflow';
 import { ProviderWorkflow } from '../workflows/ProviderWorkflow';
 import { RewardWorkflow } from '../workflows/RewardWorkflow';
+import type { GlinSigner } from '../types';
+import { isKeyringPair } from '../types';
 import type {
   FederatedTask,
   HardwareRequirements,
@@ -13,7 +14,8 @@ import type {
 
 export interface FederatedLearningConfig {
   api: ApiPromise;
-  signer: KeyringPair;
+  signer: GlinSigner;
+  signerAddress?: string;
   taskName: string;
   modelType: ModelType;
   bounty: bigint;
@@ -49,10 +51,11 @@ export class FederatedLearningPattern {
 
   constructor(
     private api: ApiPromise,
-    private signer: KeyringPair
+    private signer: GlinSigner,
+    private signerAddress?: string
   ) {
-    this.taskWorkflow = new TaskCreatorWorkflow(api, signer);
-    this.rewardWorkflow = new RewardWorkflow(api, signer);
+    this.taskWorkflow = new TaskCreatorWorkflow(api, signer, signerAddress);
+    this.rewardWorkflow = new RewardWorkflow(api, signer, signerAddress);
   }
 
   /**

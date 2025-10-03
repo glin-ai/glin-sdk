@@ -1,6 +1,9 @@
-import { ApiPromise } from '@polkadot/api';
-import type { KeyringPair } from '@polkadot/keyring/types';
+import type { ApiPromise } from '@polkadot/api';
+import type { SubmittableExtrinsic, SubmittableResultValue } from '@polkadot/api/types';
+import type { EventRecord } from '@polkadot/types/interfaces';
 import type { RewardBatch, ProviderReward } from '../types/federated';
+import type { GlinSigner } from '../types';
+import { isKeyringPair } from '../types';
 
 export interface CreateBatchParams {
   taskId: string;
@@ -42,8 +45,33 @@ export interface ClaimableRewards {
 export class RewardWorkflow {
   constructor(
     private api: ApiPromise,
-    private signer?: KeyringPair
+    private signer?: GlinSigner,
+    private signerAddress?: string
   ) {}
+
+  /**
+   * Helper to sign and send transaction
+   * Handles both KeyringPair and InjectedSigner
+   */
+  private async signAndSend(
+    tx: SubmittableExtrinsic<'promise'>,
+    callback: (result: SubmittableResultValue) => void
+  ) {
+    if (!this.signer) {
+      throw new Error('Signer required')
+    }
+
+    if (isKeyringPair(this.signer)) {
+      // Direct signer (KeyringPair)
+      return tx.signAndSend(this.signer, callback)
+    } else {
+      // Extension signer (InjectedSigner)
+      if (!this.signerAddress) {
+        throw new Error('Address required for extension signer')
+      }
+      return tx.signAndSend(this.signerAddress, { signer: this.signer }, callback)
+    }
+  }
 
   /**
    * Create a reward batch for a completed task
@@ -62,11 +90,11 @@ export class RewardWorkflow {
     );
 
     return new Promise<string>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const batchCreatedEvent = events.find(
-            ({ event }) =>
-              event.section === 'rewardDistribution' && event.method === 'BatchCreated'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const batchCreatedEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'rewardDistribution' && record.event.method === 'BatchCreated'
           );
 
           if (batchCreatedEvent) {
@@ -100,11 +128,11 @@ export class RewardWorkflow {
     const tx = this.api.tx.rewardDistribution.submitRewards(params.batchId, rewards);
 
     await new Promise<void>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const rewardsSubmittedEvent = events.find(
-            ({ event }) =>
-              event.section === 'rewardDistribution' && event.method === 'RewardsSubmitted'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const rewardsSubmittedEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'rewardDistribution' && record.event.method === 'RewardsSubmitted'
           );
 
           if (rewardsSubmittedEvent) {
@@ -129,11 +157,11 @@ export class RewardWorkflow {
     const tx = this.api.tx.rewardDistribution.settleBatch(batchId);
 
     await new Promise<void>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const batchSettledEvent = events.find(
-            ({ event }) =>
-              event.section === 'rewardDistribution' && event.method === 'BatchSettled'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const batchSettledEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'rewardDistribution' && record.event.method === 'BatchSettled'
           );
 
           if (batchSettledEvent) {
@@ -156,15 +184,19 @@ export class RewardWorkflow {
       throw new Error('Signer required to claim rewards');
     }
 
-    const address = providerAddress || this.signer.address;
+    const address = providerAddress || (isKeyringPair(this.signer) ? this.signer.address : this.signerAddress);
+    if (!address) {
+      throw new Error('Provider address required');
+    }
+
     const tx = this.api.tx.rewardDistribution.claimRewards(address);
 
     return new Promise<bigint>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const rewardsClaimedEvent = events.find(
-            ({ event }) =>
-              event.section === 'rewardDistribution' && event.method === 'RewardsClaimed'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const rewardsClaimedEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'rewardDistribution' && record.event.method === 'RewardsClaimed'
           );
 
           if (rewardsClaimedEvent) {

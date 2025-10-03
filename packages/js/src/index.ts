@@ -38,7 +38,8 @@ export type {
   Task,
   SearchResult,
   GlinSDKConfig,
-  InjectedExtension
+  InjectedExtension,
+  GlinSigner
 } from './types';
 
 // Federated Learning types

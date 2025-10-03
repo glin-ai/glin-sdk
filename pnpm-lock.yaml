@@ -76,9 +76,15 @@ importers:
       '@polkadot/api-contract':
         specifier: ^12.0.2
         version: 12.4.2
+      '@polkadot/extension-dapp':
+        specifier: ^0.50.1
+        version: 0.50.1(@polkadot/api@12.4.2)(@polkadot/util-crypto@13.5.6(@polkadot/util@13.5.6))(@polkadot/util@13.5.6)
       '@polkadot/keyring':
         specifier: ^13.0.2
         version: 13.5.6(@polkadot/util-crypto@13.5.6(@polkadot/util@13.5.6))(@polkadot/util@13.5.6)
+      '@polkadot/types':
+        specifier: ^12.0.2
+        version: 12.4.2
       '@polkadot/util':
         specifier: ^13.0.2
         version: 13.5.6
@@ -611,6 +617,21 @@ packages:
   '@polkadot/api@12.4.2':
     resolution: {integrity: sha512-e1KS048471iBWZU10TJNEYOZqLO+8h8ajmVqpaIBOVkamN7tmacBxmHgq0+IA8VrGxjxtYNa1xF5Sqrg76uBEg==}
     engines: {node: '>=18'}
+
+  '@polkadot/extension-dapp@0.50.1':
+    resolution: {integrity: sha512-idMl20nuH+frLzIot4+wtl9cP3+cI1vyVtVJM9mzKOrEvZsFDHUk1OVGGPqnbJmB17r162RKgQmThLm4aM7rvw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@polkadot/api': '*'
+      '@polkadot/util': '*'
+      '@polkadot/util-crypto': '*'
+
+  '@polkadot/extension-inject@0.50.1':
+    resolution: {integrity: sha512-5WKZqGmuUVtZEB6HU+FOOOIaDhDXvm9HAGQWgvHTUXgmdtO8Oa8WVG3tuc8x5J/SIfBlR627Zs7dYGTHjN/dHQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@polkadot/api': '*'
+      '@polkadot/util': '*'
 
   '@polkadot/keyring@13.5.6':
     resolution: {integrity: sha512-Ybe6Mflrh96FKR5tfEaf/93RxJD7x9UigseNOJW6Yd8LF+GesdxrqmZD7zh+53Hb7smGQWf/0FCfwhoWZVgPUQ==}
@@ -2290,6 +2311,32 @@ snapshots:
       '@polkadot/util-crypto': 13.5.6(@polkadot/util@13.5.6)
       eventemitter3: 5.0.1
       rxjs: 7.8.2
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  '@polkadot/extension-dapp@0.50.1(@polkadot/api@12.4.2)(@polkadot/util-crypto@13.5.6(@polkadot/util@13.5.6))(@polkadot/util@13.5.6)':
+    dependencies:
+      '@polkadot/api': 12.4.2
+      '@polkadot/extension-inject': 0.50.1(@polkadot/api@12.4.2)(@polkadot/util@13.5.6)
+      '@polkadot/util': 13.5.6
+      '@polkadot/util-crypto': 13.5.6(@polkadot/util@13.5.6)
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  '@polkadot/extension-inject@0.50.1(@polkadot/api@12.4.2)(@polkadot/util@13.5.6)':
+    dependencies:
+      '@polkadot/api': 12.4.2
+      '@polkadot/rpc-provider': 12.4.2
+      '@polkadot/types': 12.4.2
+      '@polkadot/util': 13.5.6
+      '@polkadot/util-crypto': 13.5.6(@polkadot/util@13.5.6)
+      '@polkadot/x-global': 13.5.6
       tslib: 2.8.1
     transitivePeerDependencies:
       - bufferutil

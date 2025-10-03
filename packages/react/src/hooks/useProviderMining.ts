@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useGlinClient } from './useGlinClient';
-import { useAccount } from './useAccount';
+import { useGlinSigner } from './useGlinSigner';
 import {
   ProviderMiningPattern,
   type HardwareSpec,
@@ -63,7 +63,7 @@ export function useProviderMining(
   options: UseProviderMiningOptions = {}
 ): UseProviderMiningResult {
   const { client } = useGlinClient();
-  const { signer } = useAccount();
+  const { signer, address } = useGlinSigner();
 
   const [isRegistered, setIsRegistered] = useState(false);
   const [stats, setStats] = useState<MiningStats | null>(null);
@@ -73,7 +73,9 @@ export function useProviderMining(
   const [error, setError] = useState<Error | null>(null);
 
   // Initialize pattern
-  const pattern = client && signer ? new ProviderMiningPattern(client, signer) : null;
+  const pattern = client && signer && address && client.getApi()
+    ? new ProviderMiningPattern(client.getApi()!, signer, address)
+    : null;
 
   // Check if provider is registered
   const checkRegistration = useCallback(async () => {

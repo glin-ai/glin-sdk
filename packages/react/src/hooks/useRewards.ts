@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useGlinClient } from './useGlinClient';
-import { useAccount } from './useAccount';
+import { useGlinSigner } from './useGlinSigner';
 import {
   RewardWorkflow,
   type RewardBatch,
@@ -58,7 +58,7 @@ export interface UseRewardsResult {
  */
 export function useRewards(options: UseRewardsOptions = {}): UseRewardsResult {
   const { client } = useGlinClient();
-  const { signer } = useAccount();
+  const { signer, address } = useGlinSigner();
 
   const [batch, setBatch] = useState<RewardBatch | null>(null);
   const [taskRewards, setTaskRewards] = useState<ProviderReward[]>([]);
@@ -67,7 +67,9 @@ export function useRewards(options: UseRewardsOptions = {}): UseRewardsResult {
   const [error, setError] = useState<Error | null>(null);
 
   // Initialize workflow
-  const workflow = client && signer ? new RewardWorkflow(client, signer) : null;
+  const workflow = client && signer && address && client.getApi()
+    ? new RewardWorkflow(client.getApi()!, signer, address)
+    : null;
 
   // Refresh batch
   const refreshBatch = useCallback(async () => {
@@ -101,16 +103,16 @@ export function useRewards(options: UseRewardsOptions = {}): UseRewardsResult {
   const refreshClaimableRewards = useCallback(async () => {
     if (!workflow) return;
 
-    const address = options.providerAddress || signer?.address;
-    if (!address) return;
+    const providerAddr = options.providerAddress || address;
+    if (!providerAddr) return;
 
     try {
-      const claimable = await workflow.getClaimableRewards(address);
+      const claimable = await workflow.getClaimableRewards(providerAddr);
       setClaimableRewards(claimable);
     } catch (err) {
       setError(err as Error);
     }
-  }, [workflow, options.providerAddress, signer]);
+  }, [workflow, options.providerAddress, address]);
 
   // Create batch
   const createBatch = useCallback(
@@ -227,10 +229,10 @@ export function useRewards(options: UseRewardsOptions = {}): UseRewardsResult {
 
   // Auto-refresh claimable rewards when provider address changes
   useEffect(() => {
-    if (options.providerAddress || signer?.address) {
+    if (options.providerAddress || address) {
       refreshClaimableRewards();
     }
-  }, [options.providerAddress, signer, refreshClaimableRewards]);
+  }, [options.providerAddress, address, refreshClaimableRewards]);
 
   // Auto-refresh
   useEffect(() => {

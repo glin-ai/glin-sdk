@@ -1,7 +1,8 @@
-import { ApiPromise } from '@polkadot/api';
-import type { KeyringPair } from '@polkadot/keyring/types';
+import type { ApiPromise } from '@polkadot/api';
 import { ProviderWorkflow } from '../workflows/ProviderWorkflow';
 import { RewardWorkflow } from '../workflows/RewardWorkflow';
+import type { GlinSigner } from '../types';
+import { isKeyringPair } from '../types';
 import type {
   HardwareSpec,
   FederatedTask,
@@ -12,7 +13,8 @@ import type {
 
 export interface MiningConfig {
   api: ApiPromise;
-  signer: KeyringPair;
+  signer: GlinSigner;
+  signerAddress?: string;
   stake: bigint;
   hardwareSpec: HardwareSpec;
 }
@@ -53,10 +55,11 @@ export class ProviderMiningPattern {
 
   constructor(
     private api: ApiPromise,
-    private signer: KeyringPair
+    private signer: GlinSigner,
+    private signerAddress?: string
   ) {
-    this.providerWorkflow = new ProviderWorkflow(api, signer);
-    this.rewardWorkflow = new RewardWorkflow(api, signer);
+    this.providerWorkflow = new ProviderWorkflow(api, signer, signerAddress);
+    this.rewardWorkflow = new RewardWorkflow(api, signer, signerAddress);
   }
 
   /**
@@ -172,9 +175,14 @@ export class ProviderMiningPattern {
     // Placeholder IPFS hash
     const gradientsIpfs = `QmGradient${params.taskId}R${params.round}`;
 
+    const address = isKeyringPair(this.signer) ? this.signer.address : this.signerAddress;
+    if (!address) {
+      throw new Error('Provider address required');
+    }
+
     return {
       taskId: params.taskId,
-      provider: this.signer.address,
+      provider: address,
       round: params.round,
       gradientsIpfs,
       qualityMetrics
@@ -191,7 +199,12 @@ export class ProviderMiningPattern {
       throw new Error('Provider not registered');
     }
 
-    const claimableRewards = await this.rewardWorkflow.getClaimableRewards(this.signer.address);
+    const address = isKeyringPair(this.signer) ? this.signer.address : this.signerAddress;
+    if (!address) {
+      throw new Error('Provider address required');
+    }
+
+    const claimableRewards = await this.rewardWorkflow.getClaimableRewards(address);
 
     // Calculate average quality score from completed tasks
     // Placeholder: would aggregate from historical data

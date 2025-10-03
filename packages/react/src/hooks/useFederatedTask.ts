@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useGlinClient } from './useGlinClient';
-import { useAccount } from './useAccount';
+import { useGlinSigner } from './useGlinSigner';
 import {
   FederatedLearningPattern,
   type FederatedTask,
@@ -47,7 +47,7 @@ export interface UseFederatedTaskResult {
  */
 export function useFederatedTask(options: UseFederatedTaskOptions = {}): UseFederatedTaskResult {
   const { client } = useGlinClient();
-  const { signer } = useAccount();
+  const { signer, address } = useGlinSigner();
 
   const [task, setTask] = useState<FederatedTask | null>(null);
   const [providers, setProviders] = useState<string[]>([]);
@@ -56,7 +56,9 @@ export function useFederatedTask(options: UseFederatedTaskOptions = {}): UseFede
   const [error, setError] = useState<Error | null>(null);
 
   // Initialize pattern
-  const pattern = client && signer ? new FederatedLearningPattern(client, signer) : null;
+  const pattern = client && signer && address && client.getApi()
+    ? new FederatedLearningPattern(client.getApi()!, signer, address)
+    : null;
 
   // Load task data
   const refreshTask = useCallback(async () => {
@@ -108,8 +110,9 @@ export function useFederatedTask(options: UseFederatedTaskOptions = {}): UseFede
         setError(null);
 
         const taskId = await pattern.createAndLaunchTask({
-          api: client!,
+          api: client!.getApi()!,
           signer: signer!,
+          signerAddress: address,
           taskName: params.name,
           modelType: params.modelType,
           bounty: params.bounty,
@@ -162,7 +165,7 @@ export function useFederatedTask(options: UseFederatedTaskOptions = {}): UseFede
         setIsLoading(true);
         setError(null);
         // In production, would pass actual gradient submissions
-        await pattern.completeAndDistributeRewards(taskId, [], [signer!.address]);
+        await pattern.completeAndDistributeRewards(taskId, [], [address!]);
         await refreshTask();
         await refreshRewards();
       } catch (err) {
@@ -173,7 +176,7 @@ export function useFederatedTask(options: UseFederatedTaskOptions = {}): UseFede
         setIsLoading(false);
       }
     },
-    [pattern, signer, refreshTask, refreshRewards]
+    [pattern, address, refreshTask, refreshRewards]
   );
 
   // Cancel task

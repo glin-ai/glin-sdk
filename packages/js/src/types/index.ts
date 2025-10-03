@@ -2,6 +2,8 @@
  * Core types for GLIN SDK
  */
 
+export * from './signer';
+
 export interface GlinAccount {
   address: string;
   name?: string;

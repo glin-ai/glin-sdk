@@ -1,6 +1,9 @@
-import { ApiPromise } from '@polkadot/api';
-import type { KeyringPair } from '@polkadot/keyring/types';
+import type { ApiPromise } from '@polkadot/api';
+import type { SubmittableExtrinsic, SubmittableResultValue } from '@polkadot/api/types';
+import type { EventRecord } from '@polkadot/types/interfaces';
 import type { HardwareSpec, FederatedTask, TaskStatus } from '../types/federated';
+import type { GlinSigner } from '../types';
+import { isKeyringPair } from '../types';
 
 export interface RegisterProviderParams {
   stake: bigint;
@@ -31,8 +34,33 @@ export interface ProviderInfo {
 export class ProviderWorkflow {
   constructor(
     private api: ApiPromise,
-    private signer?: KeyringPair
+    private signer?: GlinSigner,
+    private signerAddress?: string
   ) {}
+
+  /**
+   * Helper to sign and send transaction
+   * Handles both KeyringPair and InjectedSigner
+   */
+  private async signAndSend(
+    tx: SubmittableExtrinsic<'promise'>,
+    callback: (result: SubmittableResultValue) => void
+  ) {
+    if (!this.signer) {
+      throw new Error('Signer required')
+    }
+
+    if (isKeyringPair(this.signer)) {
+      // Direct signer (KeyringPair)
+      return tx.signAndSend(this.signer, callback)
+    } else {
+      // Extension signer (InjectedSigner)
+      if (!this.signerAddress) {
+        throw new Error('Address required for extension signer')
+      }
+      return tx.signAndSend(this.signerAddress, { signer: this.signer }, callback)
+    }
+  }
 
   /**
    * Register as a provider with initial stake and hardware specifications
@@ -55,11 +83,11 @@ export class ProviderWorkflow {
     );
 
     await new Promise<void>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const providerRegisteredEvent = events.find(
-            ({ event }) =>
-              event.section === 'providerStaking' && event.method === 'ProviderRegistered'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const providerRegisteredEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'providerStaking' && record.event.method === 'ProviderRegistered'
           );
 
           if (providerRegisteredEvent) {
@@ -90,8 +118,8 @@ export class ProviderWorkflow {
     });
 
     await new Promise<void>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status }) => {
-        if (status.isInBlock) {
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
           resolve();
         }
       }).catch(reject);
@@ -110,11 +138,11 @@ export class ProviderWorkflow {
     const tx = this.api.tx.taskRegistry.joinTask(taskId);
 
     await new Promise<void>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const providerJoinedEvent = events.find(
-            ({ event }) =>
-              event.section === 'taskRegistry' && event.method === 'ProviderJoined'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const providerJoinedEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'taskRegistry' && record.event.method === 'ProviderJoined'
           );
 
           if (providerJoinedEvent) {
@@ -188,7 +216,7 @@ export class ProviderWorkflow {
    * @returns Provider information
    */
   async getProviderInfo(providerAddress?: string): Promise<ProviderInfo | null> {
-    const address = providerAddress || this.signer?.address;
+    const address = providerAddress || (isKeyringPair(this.signer!) ? this.signer.address : this.signerAddress);
     if (!address) {
       throw new Error('Provider address required');
     }
@@ -230,11 +258,11 @@ export class ProviderWorkflow {
     const tx = this.api.tx.providerStaking.startUnbonding();
 
     await new Promise<void>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const unbondingStartedEvent = events.find(
-            ({ event }) =>
-              event.section === 'providerStaking' && event.method === 'UnbondingStarted'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const unbondingStartedEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'providerStaking' && record.event.method === 'UnbondingStarted'
           );
 
           if (unbondingStartedEvent) {
@@ -259,11 +287,11 @@ export class ProviderWorkflow {
     const tx = this.api.tx.providerStaking.withdrawStake();
 
     return new Promise<bigint>((resolve, reject) => {
-      tx.signAndSend(this.signer!, ({ status, events }) => {
-        if (status.isInBlock) {
-          const stakeWithdrawnEvent = events.find(
-            ({ event }) =>
-              event.section === 'providerStaking' && event.method === 'StakeWithdrawn'
+      this.signAndSend(tx, (result) => {
+        if (result.status.isInBlock) {
+          const stakeWithdrawnEvent = result.events?.find(
+            (record: EventRecord) =>
+              record.event.section === 'providerStaking' && record.event.method === 'StakeWithdrawn'
           );
 
           if (stakeWithdrawnEvent) {
@@ -283,7 +311,7 @@ export class ProviderWorkflow {
    * @returns Array of active task IDs
    */
   async getActiveTasks(providerAddress?: string): Promise<string[]> {
-    const address = providerAddress || this.signer?.address;
+    const address = providerAddress || (isKeyringPair(this.signer!) ? this.signer.address : this.signerAddress);
     if (!address) {
       throw new Error('Provider address required');
     }
@@ -305,7 +333,7 @@ export class ProviderWorkflow {
    * @returns true if provider meets requirements
    */
   async meetsRequirements(taskId: string, providerAddress?: string): Promise<boolean> {
-    const address = providerAddress || this.signer?.address;
+    const address = providerAddress || (isKeyringPair(this.signer!) ? this.signer.address : this.signerAddress);
     if (!address) {
       throw new Error('Provider address required');
     }

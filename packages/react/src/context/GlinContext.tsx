@@ -8,7 +8,6 @@ const defaultContextValue: GlinContextState = {
   config: {},
   auth: null,
   client: null,
-  contracts: null,
   wallet: {
     account: null,
     isConnected: false,

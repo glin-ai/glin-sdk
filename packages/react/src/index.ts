@@ -15,6 +15,7 @@ export { useAccount } from "./hooks/useAccount"
 export { useBalance } from "./hooks/useBalance"
 export { useAuth } from "./hooks/useAuth"
 export { useGlinClient } from "./hooks/useGlinClient"
+export { useGlinSigner } from "./hooks/useGlinSigner"
 
 // Federated Learning Hooks
 export { useFederatedTask } from "./hooks/useFederatedTask"
