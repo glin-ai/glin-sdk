@@ -1,6 +1,6 @@
 {
   "name": "@glin-ai/sdk",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "description": "Official JavaScript/TypeScript SDK for GLIN AI Training Network",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -46,13 +46,13 @@
     "directory": "packages/js"
   },
   "dependencies": {
-    "@polkadot/api": "^12.0.2",
-    "@polkadot/api-contract": "^12.0.2",
-    "@polkadot/extension-dapp": "^0.50.1",
-    "@polkadot/keyring": "^13.0.2",
-    "@polkadot/types": "^12.0.2",
-    "@polkadot/util": "^13.0.2",
-    "@polkadot/util-crypto": "^13.0.2"
+    "@polkadot/api": "^16.4.8",
+    "@polkadot/api-contract": "^16.4.8",
+    "@polkadot/extension-dapp": "^0.53.1",
+    "@polkadot/keyring": "^13.2.3",
+    "@polkadot/types": "^16.4.8",
+    "@polkadot/util": "^13.2.3",
+    "@polkadot/util-crypto": "^13.2.3"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

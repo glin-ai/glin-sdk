@@ -1,5 +1,10 @@
 /**
  * Transfer module for GLIN token transfers
+ *
+ * All amount parameters expect values in planck (smallest unit).
+ * 1 GLIN = 10^18 planck
+ *
+ * Use parseGLIN() from '@glin-ai/sdk' to convert GLIN to planck.
  */
 
 import { ApiPromise } from '@polkadot/api';
@@ -9,18 +14,32 @@ export class GlinTransfer {
 
   /**
    * Transfer tokens from one account to another
+   *
+   * @param from - KeyringPair or InjectedAccountWithMeta
+   * @param to - Recipient address
+   * @param amount - Amount in planck (smallest unit). Use parseGLIN() to convert from GLIN.
+   * @param onStatus - Optional callback for transaction status
+   * @returns Transaction hash
+   *
+   * @example
+   * ```typescript
+   * import { parseGLIN } from '@glin-ai/sdk';
+   *
+   * // Convert user input to planck
+   * const amount = parseGLIN("10.5"); // 10.5 GLIN → 10500000000000000000n planck
+   *
+   * // Transfer (amount is in planck)
+   * const hash = await transfer.transfer(keypair, recipient, amount);
+   * ```
    */
   async transfer(
     from: any, // KeyringPair or InjectedAccountWithMeta
     to: string,
-    amount: string,
+    amount: bigint,
     onStatus?: (status: any) => void
   ): Promise<string> {
-    // Convert amount to smallest unit (18 decimals for GLIN)
-    const decimals = 18;
-    const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals))).toString();
-
-    const transfer = this.api.tx.balances.transferKeepAlive(to, amountInSmallestUnit);
+    // Amount is already in planck (smallest unit) - use directly
+    const transfer = this.api.tx.balances.transferKeepAlive(to, amount);
 
     return new Promise((resolve, reject) => {
       transfer.signAndSend(from, (result: any) => {
@@ -42,17 +61,28 @@ export class GlinTransfer {
 
   /**
    * Estimate transaction fee for a transfer
+   *
+   * @param from - Sender address
+   * @param to - Recipient address
+   * @param amount - Amount in planck (smallest unit). Use parseGLIN() to convert from GLIN.
+   * @returns Estimated fee in planck as string
+   *
+   * @example
+   * ```typescript
+   * import { parseGLIN } from '@glin-ai/sdk';
+   *
+   * const amount = parseGLIN("10.5");
+   * const fee = await transfer.estimateFee(senderAddress, recipient, amount);
+   * console.log(`Fee: ${formatGLIN(BigInt(fee))} GLIN`);
+   * ```
    */
   async estimateFee(
     from: string,
     to: string,
-    amount: string
+    amount: bigint
   ): Promise<string> {
-    // Convert amount to smallest unit (18 decimals for GLIN)
-    const decimals = 18;
-    const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals))).toString();
-
-    const transfer = this.api.tx.balances.transferKeepAlive(to, amountInSmallestUnit);
+    // Amount is already in planck (smallest unit) - use directly
+    const transfer = this.api.tx.balances.transferKeepAlive(to, amount);
     const info = await transfer.paymentInfo(from);
     return info.partialFee.toString();
   }
@@ -87,17 +117,29 @@ export class GlinTransfer {
 
   /**
    * Transfer with allow death (can reduce balance below existential deposit)
+   *
+   * @param from - KeyringPair or InjectedAccountWithMeta
+   * @param to - Recipient address
+   * @param amount - Amount in planck (smallest unit). Use parseGLIN() to convert from GLIN.
+   * @param onStatus - Optional callback for transaction status
+   * @returns Transaction hash
+   *
+   * @example
+   * ```typescript
+   * import { parseGLIN } from '@glin-ai/sdk';
+   *
+   * const amount = parseGLIN("10.5");
+   * const hash = await transfer.transferAllowDeath(keypair, recipient, amount);
+   * ```
    */
   async transferAllowDeath(
     from: any,
     to: string,
-    amount: string,
+    amount: bigint,
     onStatus?: (status: any) => void
   ): Promise<string> {
-    const decimals = 18;
-    const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals))).toString();
-
-    const transfer = this.api.tx.balances.transferAllowDeath(to, amountInSmallestUnit);
+    // Amount is already in planck (smallest unit) - use directly
+    const transfer = this.api.tx.balances.transferAllowDeath(to, amount);
 
     return new Promise((resolve, reject) => {
       transfer.signAndSend(from, (result: any) => {

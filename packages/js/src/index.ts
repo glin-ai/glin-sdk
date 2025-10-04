@@ -11,6 +11,9 @@ export { GlinProviders } from './providers';
 export { GlinPoints } from './points';
 export { GlinTransfer } from './transfer';
 
+// Format utilities (following ethers.js pattern)
+export { parseGLIN, formatGLIN, parseUnits, formatUnits } from './utils/format';
+
 // Federated Learning Workflows
 export { TaskCreatorWorkflow } from './workflows/TaskCreatorWorkflow';
 export { ProviderWorkflow } from './workflows/ProviderWorkflow';
@@ -71,4 +74,4 @@ export type {
 } from './types/federated';
 
 // Version
-export const VERSION = '0.3.0';
+export const VERSION = '0.4.1';

@@ -122,20 +122,31 @@ export class GlinClient {
 
   /**
    * Transfer tokens
+   *
+   * @param from - KeyringPair or InjectedAccountWithMeta
+   * @param to - Recipient address
+   * @param amount - Amount in planck (smallest unit). Use parseGLIN() to convert from GLIN.
+   * @param onStatus - Optional callback for transaction status
+   * @returns Transaction hash
+   *
+   * @example
+   * ```typescript
+   * import { parseGLIN } from '@glin-ai/sdk';
+   *
+   * const amount = parseGLIN("10.5");
+   * const hash = await client.transfer(keypair, recipient, amount);
+   * ```
    */
   async transfer(
     from: any, // KeyringPair or InjectedAccountWithMeta
     to: string,
-    amount: string,
+    amount: bigint,
     onStatus?: (status: any) => void
   ): Promise<string> {
     await this.ensureConnected();
 
-    // Convert amount to smallest unit (18 decimals for GLIN)
-    const decimals = 18;
-    const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals))).toString();
-
-    const transfer = this.api!.tx.balances.transferKeepAlive(to, amountInSmallestUnit);
+    // Amount is already in planck (smallest unit) - use directly
+    const transfer = this.api!.tx.balances.transferKeepAlive(to, amount);
 
     return new Promise((resolve, reject) => {
       transfer.signAndSend(from, (result: any) => {
@@ -157,19 +168,30 @@ export class GlinClient {
 
   /**
    * Estimate transaction fee
+   *
+   * @param from - Sender address
+   * @param to - Recipient address
+   * @param amount - Amount in planck (smallest unit). Use parseGLIN() to convert from GLIN.
+   * @returns Estimated fee in planck as string
+   *
+   * @example
+   * ```typescript
+   * import { parseGLIN, formatGLIN } from '@glin-ai/sdk';
+   *
+   * const amount = parseGLIN("10.5");
+   * const fee = await client.estimateFee(senderAddress, recipient, amount);
+   * console.log(`Fee: ${formatGLIN(BigInt(fee))} GLIN`);
+   * ```
    */
   async estimateFee(
     from: string,
     to: string,
-    amount: string
+    amount: bigint
   ): Promise<string> {
     await this.ensureConnected();
 
-    // Convert amount to smallest unit (18 decimals for GLIN)
-    const decimals = 18;
-    const amountInSmallestUnit = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals))).toString();
-
-    const transfer = this.api!.tx.balances.transferKeepAlive(to, amountInSmallestUnit);
+    // Amount is already in planck (smallest unit) - use directly
+    const transfer = this.api!.tx.balances.transferKeepAlive(to, amount);
     const info = await transfer.paymentInfo(from);
     return info.partialFee.toString();
   }
