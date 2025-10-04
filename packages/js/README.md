@@ -293,10 +293,291 @@ function LoginButton() {
 }
 ```
 
+## Smart Contracts
+
+The SDK provides a powerful, ethers.js-like API for interacting with ink! smart contracts.
+
+### Deploying a Contract
+
+```typescript
+import { GlinClient, deployContract } from '@glin-ai/sdk';
+import { GlinAuth } from '@glin-ai/sdk';
+import contractAbi from './my_contract.json';
+import contractWasm from './my_contract.wasm';
+
+const client = new GlinClient('wss://testnet.glin.network');
+await client.connect();
+
+const auth = new GlinAuth();
+const { address, signer } = await auth.connect();
+
+// Deploy contract
+const result = await deployContract(
+  client.getApi(),
+  contractWasm,
+  contractAbi,
+  [1000000n], // constructor arguments
+  signer,
+  { value: '1000000000000000' } // 0.001 GLIN
+);
+
+if (result.success) {
+  console.log('Contract deployed at:', result.address);
+  console.log('Code hash:', result.codeHash);
+}
+```
+
+### Interacting with Contracts
+
+The `Contract` class provides dynamic interfaces for any ink! contract:
+
+```typescript
+import { Contract } from '@glin-ai/sdk';
+
+// Connect to deployed contract
+const contract = new Contract(
+  client.getApi(),
+  '5ContractAddress...',
+  contractAbi,
+  signer // optional, only needed for transactions
+);
+
+// Read-only queries (no gas costs)
+const balance = await contract.query.balanceOf('5Account...');
+if (balance.success) {
+  console.log('Balance:', balance.data);
+  console.log('Gas consumed:', balance.gasConsumed);
+}
+
+// State-changing transactions
+const txResult = await contract.tx.transfer(
+  '5Recipient...',
+  1000n,
+  { value: 0, gasLimit: { refTime: 3000000000n, proofSize: 1000000n } }
+);
+
+if (txResult.success) {
+  console.log('Transaction hash:', txResult.txHash);
+  console.log('Block hash:', txResult.blockHash);
+}
+```
+
+### Contract Utilities
+
+```typescript
+import {
+  parseContractAbi,
+  validateContractAbi,
+  isContractAddress,
+  getContractCodeHash
+} from '@glin-ai/sdk';
+
+// Parse ABI metadata
+const metadata = parseContractAbi(contractAbi);
+console.log('Contract name:', metadata.contractName);
+console.log('Constructors:', metadata.constructors);
+console.log('Messages:', metadata.messages);
+
+// Validate ABI
+const isValid = validateContractAbi(contractAbi);
+
+// Check if address is a contract
+const api = client.getApi();
+const isContract = await isContractAddress(api, '5Address...');
+
+// Get contract code hash
+const codeHash = await getContractCodeHash(api, '5ContractAddress...');
+```
+
+### Advanced: Upload & Instantiate Separately
+
+For advanced use cases, you can upload code and instantiate separately:
+
+```typescript
+import { uploadCode, instantiateContract } from '@glin-ai/sdk';
+
+// Step 1: Upload WASM code
+const uploadResult = await uploadCode(
+  client.getApi(),
+  contractWasm,
+  signer
+);
+
+if (uploadResult.success) {
+  const codeHash = uploadResult.codeHash;
+
+  // Step 2: Instantiate from code hash
+  const instantiateResult = await instantiateContract(
+    client.getApi(),
+    codeHash,
+    contractAbi,
+    [1000000n], // constructor args
+    signer,
+    { value: '0', salt: null }
+  );
+
+  if (instantiateResult.success) {
+    console.log('Contract address:', instantiateResult.address);
+  }
+}
+```
+
+### Contract API Reference
+
+#### `Contract`
+
+**Constructor:**
+```typescript
+new Contract(
+  api: ApiPromise,
+  address: string,
+  abi: any,
+  signer?: Signer
+)
+```
+
+**Properties:**
+- `query` - Object with all query methods from ABI
+- `tx` - Object with all transaction methods from ABI
+- `address` - Contract address
+- `abi` - Contract ABI metadata
+
+**Methods:**
+- `executeQuery(method, options?, ...args)` - Execute a contract query
+- `executeTx(method, options?, ...args)` - Execute a contract transaction
+
+#### `deployContract()`
+
+```typescript
+async function deployContract(
+  api: ApiPromise,
+  wasm: Uint8Array | string,
+  abi: any,
+  constructorArgs: any[] = [],
+  signer: Signer,
+  options: DeployOptions = {}
+): Promise<DeployResult>
+```
+
+**Options:**
+- `value?: string | bigint` - Native tokens to send
+- `gasLimit?: WeightV2` - Gas limit override
+- `storageDepositLimit?: string | bigint` - Storage deposit limit
+- `salt?: string | null` - Deployment salt for deterministic addresses
+
+**Returns:**
+```typescript
+{
+  success: boolean;
+  address?: string;
+  codeHash?: string;
+  txHash?: string;
+  blockHash?: string;
+  error?: string;
+}
+```
+
+#### `uploadCode()`
+
+Upload WASM code to the chain:
+
+```typescript
+async function uploadCode(
+  api: ApiPromise,
+  wasm: Uint8Array | string,
+  signer: Signer,
+  options: UploadOptions = {}
+): Promise<UploadResult>
+```
+
+#### `instantiateContract()`
+
+Instantiate a contract from uploaded code hash:
+
+```typescript
+async function instantiateContract(
+  api: ApiPromise,
+  codeHash: string,
+  abi: any,
+  constructorArgs: any[] = [],
+  signer: Signer,
+  options: InstantiateOptions = {}
+): Promise<InstantiateResult>
+```
+
+### Type Definitions
+
+```typescript
+interface QueryResult<T = any> {
+  success: boolean;
+  data?: T;
+  gasConsumed?: bigint;
+  storageDeposit?: bigint;
+  error?: string;
+}
+
+interface TxResult {
+  success: boolean;
+  txHash?: string;
+  blockHash?: string;
+  events?: any[];
+  error?: string;
+}
+
+interface ContractMetadata {
+  contractName: string;
+  version: string;
+  authors: string[];
+  constructors: ContractMessage[];
+  messages: ContractMessage[];
+  events: ContractEvent[];
+  docs: string[];
+}
+
+interface ContractMessage {
+  label: string;
+  selector: string;
+  args: ContractArgument[];
+  returnType?: ContractType;
+  mutates: boolean;
+  payable: boolean;
+  docs: string[];
+}
+```
+
 ## Examples
 
 - **[Next.js Authentication](../../examples/nextjs-auth/)** - Full "Sign in with GLIN" example
 - More examples coming soon...
+
+## Migration Guide
+
+### From Specific Contracts to Generic API
+
+**Old approach (pre-0.5.0):**
+```typescript
+// Limited to pre-defined contracts
+import { EscrowContract } from '@glin-ai/sdk';
+
+const escrow = new EscrowContract(api, address, signer);
+await escrow.createEscrow(...);
+```
+
+**New approach (0.5.0+):**
+```typescript
+// Works with ANY ink! contract
+import { Contract } from '@glin-ai/sdk';
+
+const contract = new Contract(api, address, abi, signer);
+await contract.tx.createEscrow(...); // Dynamic method from ABI
+```
+
+The new approach:
+- ✅ Works with any ink! contract
+- ✅ Dynamic interface from ABI
+- ✅ Type-safe with TypeScript
+- ✅ Follows ethers.js patterns
+- ✅ Simpler API surface
 
 ## Browser Support
 

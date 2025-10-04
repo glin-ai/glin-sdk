@@ -14,6 +14,21 @@ export { GlinTransfer } from './transfer';
 // Format utilities (following ethers.js pattern)
 export { parseGLIN, formatGLIN, parseUnits, formatUnits } from './utils/format';
 
+// Generic Smart Contract Support (ethers.js-like API)
+export { Contract } from './contracts/contract';
+export { deployContract, uploadCode, instantiateContract } from './contracts/deploy';
+export {
+  parseContractAbi,
+  getContractMessages,
+  isContractAddress,
+  getContractCodeHash,
+  getContractCode,
+  decodeContractEvent,
+  decodeContractCall,
+  validateContractAbi,
+  getContractStorageDeposit
+} from './contracts/utils';
+
 // Federated Learning Workflows
 export { TaskCreatorWorkflow } from './workflows/TaskCreatorWorkflow';
 export { ProviderWorkflow } from './workflows/ProviderWorkflow';
@@ -45,6 +60,22 @@ export type {
   GlinSigner
 } from './types';
 
+// Smart Contract types
+export type {
+  QueryResult,
+  TxResult,
+  ContractEvent,
+  CallOptions
+} from './contracts/contract';
+export type {
+  DeployOptions,
+  DeployResult
+} from './contracts/deploy';
+export type {
+  ContractMetadata,
+  ContractMessage
+} from './contracts/utils';
+
 // Federated Learning types
 export type {
   ModelType,
@@ -74,4 +105,4 @@ export type {
 } from './types/federated';
 
 // Version
-export const VERSION = '0.4.1';
+export const VERSION = '0.5.0';

@@ -22,6 +22,16 @@ export { useFederatedTask } from "./hooks/useFederatedTask"
 export { useProviderMining } from "./hooks/useProviderMining"
 export { useRewards } from "./hooks/useRewards"
 
+// Smart Contract Hooks
+export { useContract } from "./hooks/useContract"
+export { useContractQuery } from "./hooks/useContractQuery"
+export { useContractTx } from "./hooks/useContractTx"
+export { useContractDeploy } from "./hooks/useContractDeploy"
+export type { UseContractOptions, UseContractReturn } from "./hooks/useContract"
+export type { UseContractQueryOptions, UseContractQueryReturn } from "./hooks/useContractQuery"
+export type { UseContractTxOptions, UseContractTxReturn } from "./hooks/useContractTx"
+export type { UseContractDeployOptions, UseContractDeployReturn } from "./hooks/useContractDeploy"
+
 // Components
 export { ConnectWallet } from "./components/ConnectWallet"
 export { AccountInfo } from "./components/AccountInfo"
