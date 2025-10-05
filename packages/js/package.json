@@ -40,6 +40,10 @@
   ],
   "author": "GLIN AI",
   "license": "Apache-2.0",
+  "homepage": "https://docs.glin.ai/sdk/typescript/setup",
+  "bugs": {
+    "url": "https://github.com/glin-ai/glin-sdk/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/glin-ai/glin-sdk.git",

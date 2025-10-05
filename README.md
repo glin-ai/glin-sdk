@@ -34,7 +34,7 @@ yarn add @glin-ai/sdk
 pnpm add @glin-ai/sdk
 ```
 
-**[📚 Full Documentation](./packages/js/)**
+**[📚 Full Documentation →](https://docs.glin.ai/sdk/typescript/setup)**
 
 ## 🔗 Other SDKs
 
@@ -64,7 +64,7 @@ if (isValid) {
 }
 ```
 
-**[📖 Full Example](./examples/nextjs-auth/)**
+**[📖 Full Example →](https://docs.glin.ai/sdk/examples/sign-in-with-glin)**
 
 ### Blockchain Queries
 
@@ -194,10 +194,11 @@ glin-sdk/
 
 ## 📚 Documentation
 
-- **[Getting Started Guide](./docs/getting-started.md)**
-- **[Authentication Guide](./docs/authentication.md)**
-- **[API Reference](./docs/api-reference.md)**
-- **[Examples](./examples/)**
+- **[Getting Started →](https://docs.glin.ai/sdk/getting-started/overview)**
+- **[TypeScript Setup →](https://docs.glin.ai/sdk/typescript/setup)**
+- **[Authentication Guide →](https://docs.glin.ai/sdk/core-concepts/authentication)**
+- **[Examples →](https://docs.glin.ai/sdk/examples/sign-in-with-glin)**
+- **[API Reference →](https://docs.glin.ai/sdk/typescript/api-reference)**
 
 ## 🤝 Contributing
 
