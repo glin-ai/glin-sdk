@@ -1,50 +1,53 @@
-# GLIN SDK
+<div align="center">
+  <img src="https://raw.githubusercontent.com/glin-ai/glin-sdk/main/assets/glin-coin.svg" alt="GLIN Logo" width="120" height="120">
 
-Official Software Development Kits for the GLIN AI Training Network.
+  # GLIN SDK
+
+Official TypeScript/JavaScript SDK for the GLIN AI Training Network.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/@glin-ai/sdk.svg)](https://www.npmjs.com/package/@glin-ai/sdk)
 
-## 📦 Available SDKs
+</div>
 
-### JavaScript/TypeScript (npm)
+## 🎯 Overview
+
+Complete TypeScript/JavaScript SDK for building applications on GLIN Network. Provides all core blockchain features for frontend and backend development.
+
+### ✅ Features
+
+- 🌐 **Network connection and RPC** - Connect to GLIN Network nodes
+- 🔐 **Account management** - Create and manage blockchain accounts
+- 📜 **Contract deployment** - Deploy ink! smart contracts
+- 💸 **Transaction handling** - Sign and submit transactions
+- 📡 **Event subscriptions** - Listen to blockchain events
+- 🎨 **Browser extension support** - Integration with GLIN wallet extension
+- ✨ **Full TypeScript support** - Type-safe API with IntelliSense
+
+## 📦 Installation
+
 ```bash
 npm install @glin-ai/sdk
+# or
+yarn add @glin-ai/sdk
+# or
+pnpm add @glin-ai/sdk
 ```
-- ✅ Browser extension detection
-- ✅ "Sign in with GLIN" authentication
-- ✅ Blockchain client (Polkadot.js)
-- ✅ Smart contract interactions
-- ✅ Full TypeScript support
 
-**[📚 JS/TS Documentation](./packages/js/)**
+**[📚 Full Documentation](./packages/js/)**
 
-### Python (PyPI)
-```bash
-pip install glin-sdk
-```
-- ✅ Blockchain client (substrate-interface)
-- ✅ Signature verification
-- ✅ Smart contract interactions
-- ✅ Type hints support
-- ✅ Async/await ready
+## 🔗 Other SDKs
 
-**[📚 Python Documentation](./packages/python/)**
+GLIN Network provides SDKs for multiple languages:
 
-### Rust (crates.io)
-```bash
-cargo add glin-sdk
-```
-- ✅ Type-safe API (subxt)
-- ✅ Smart contract interactions
-- ✅ Zero-cost abstractions
-- ✅ Async/await (Tokio)
-- ✅ Production-ready
+- **[glin-sdk-rust](https://github.com/glin-ai/glin-sdk-rust)**: Rust SDK (backend + CLI tools)
+- **glin-sdk-python** (planned): Python SDK (data science + analytics)
 
-**[📚 Rust Documentation](./packages/rust/)**
+All SDKs share the same **core features**, with language-specific extensions.
 
 ## 🚀 Quick Start
 
-### TypeScript - "Sign in with GLIN" (v-lawyer use case)
+### "Sign in with GLIN" Authentication
 
 ```typescript
 import { GlinAuth } from '@glin-ai/sdk';
@@ -63,109 +66,58 @@ if (isValid) {
 
 **[📖 Full Example](./examples/nextjs-auth/)**
 
-### Python - Blockchain Queries
+### Blockchain Queries
 
-```python
-from glin_sdk import GlinClient
+```typescript
+import { GlinClient } from '@glin-ai/sdk';
 
-with GlinClient("wss://rpc.glin.ai") as client:
-    balance = client.get_balance("5GrwvaEF...")
-    print(f"Balance: {balance.free} GLIN")
+const client = await GlinClient.connect('wss://testnet.glin.ai');
+const balance = await client.getBalance('5GrwvaEF...');
+console.log(`Balance: ${balance.free} GLIN`);
 ```
 
-### Rust - Backend Integration
-
-```rust
-use glin_sdk::GlinClient;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = GlinClient::new("wss://rpc.glin.ai").await?;
-    let balance = client.get_balance("5GrwvaEF...").await?;
-    println!("Balance: {} GLIN", balance.free);
-    Ok(())
-}
-```
-
-## 🔐 Smart Contracts
-
-GLIN provides three production-ready smart contracts for building decentralized applications:
-
-### **GenericEscrow** - Milestone-based Payments
-Secure payment escrow with milestone tracking and dispute resolution.
+### Contract Deployment
 
 ```typescript
 import { GlinContracts } from '@glin-ai/sdk';
 
-const contracts = new GlinContracts({ api, signer, escrowAddress: '5Escrow...' });
+const contracts = new GlinContracts({ api, signer });
+const result = await contracts.deploy({
+  wasm: contractWasm,
+  abi: contractAbi,
+  constructorName: 'new',
+  args: [],
+  value: 0,
+});
+console.log(`Contract deployed at: ${result.address}`);
+```
 
-// Create escrow agreement
-const agreementId = await contracts.escrow.createAgreement({
-  provider: '5Provider...',
-  milestoneDescriptions: ['Design', 'Development', 'Testing'],
-  milestoneAmounts: [500n * 10n**18n, 1500n * 10n**18n, 1000n * 10n**18n],
-  milestoneDeadlines: [deadline1, deadline2, deadline3],
-  disputeTimeout: finalDeadline,
-  value: 3000n * 10n**18n
+## 📜 Contract Interaction
+
+Interact with ink! smart contracts deployed on GLIN Network:
+
+```typescript
+import { GlinContracts } from '@glin-ai/sdk';
+
+const contracts = new GlinContracts({ api, signer });
+
+// Call contract method
+const result = await contracts.call({
+  address: '5Contract...',
+  abi: contractAbi,
+  method: 'transfer',
+  args: ['5Recipient...', 1000],
+  value: 0,
+});
+
+// Query contract state
+const balance = await contracts.query({
+  address: '5Contract...',
+  abi: contractAbi,
+  method: 'balanceOf',
+  args: ['5Account...'],
 });
 ```
-
-### **ProfessionalRegistry** - Reputation System
-On-chain professional registration with reputation scoring.
-
-```python
-from glin_sdk.contracts import GlinContracts, RegisterProfessionalParams, ProfessionalRole
-
-contracts = GlinContracts(substrate, registry_address="5Registry...")
-
-# Register as professional
-await contracts.registry.register(RegisterProfessionalParams(
-    role=ProfessionalRole.LAWYER,
-    metadata_uri="ipfs://QmXYZ.../profile.json",
-    stake_amount="100000000000000000000"
-))
-
-# Submit review
-await contracts.registry.submit_review(SubmitReviewParams(
-    professional="5Professional...",
-    rating=5,
-    comment="Excellent service!"
-))
-```
-
-### **ArbitrationDAO** - Dispute Resolution
-Decentralized dispute resolution through stake-weighted voting.
-
-```rust
-use glin_sdk::contracts::{GlinContracts, CreateDisputeParams, VoteChoice};
-
-let contracts = GlinContracts::new("wss://rpc.glin.ai", ...).await?;
-
-// Create dispute
-let dispute_id = contracts.arbitration.create_dispute(
-    CreateDisputeParams {
-        defendant: defendant_addr,
-        description: "Service not delivered".into(),
-        evidence_uri: "ipfs://evidence".into(),
-    },
-    &keypair
-).await?;
-
-// Vote on dispute
-contracts.arbitration.vote(
-    VoteParams { dispute_id, choice: VoteChoice::InFavorOfClaimant },
-    &keypair
-).await?;
-```
-
-**📦 Contract Repository**: https://github.com/glin-ai/glin-contracts
-
-**📚 Documentation**:
-- [Getting Started with Contracts](./docs/contracts/getting-started.md)
-- [Escrow Contract Guide](./docs/contracts/escrow.md)
-- [Registry Contract Guide](./docs/contracts/registry.md)
-- [Arbitration Contract Guide](./docs/contracts/arbitration.md)
-- [Deployment Guide](./docs/contracts/deployment.md)
 
 ## 🎯 Use Cases
 
@@ -194,21 +146,20 @@ Build GPU provider applications:
 
 **Example apps**: Provider CLI, desktop apps
 
-## 📋 Features Comparison
+## ✨ Key Features
 
-| Feature | TypeScript | Python | Rust |
-|---------|-----------|--------|------|
-| Blockchain Client | ✅ | ✅ | ✅ |
-| Authentication | ✅ | ✅ | ✅ |
-| Extension Support | ✅ | ❌ | ❌ |
-| Signature Verification | ✅ | ✅ | ✅ |
-| **Smart Contracts** | ✅ | ✅ | ✅ |
-| - GenericEscrow | ✅ | ✅ | ✅ |
-| - ProfessionalRegistry | ✅ | ✅ | ✅ |
-| - ArbitrationDAO | ✅ | ✅ | ✅ |
-| Task Queries | ✅ | ✅ | 🚧 |
-| Provider Queries | ✅ | ✅ | 🚧 |
-| Event Subscriptions | ✅ | ❌ | 🚧 |
+| Feature | Status |
+|---------|--------|
+| Blockchain Client | ✅ |
+| Account Management | ✅ |
+| Browser Extension Support | ✅ |
+| "Sign in with GLIN" Auth | ✅ |
+| Signature Verification | ✅ |
+| Contract Deployment | ✅ |
+| Contract Interaction | ✅ |
+| Event Subscriptions | ✅ |
+| TypeScript Support | ✅ |
+| React Hooks | 🚧 |
 
 ## 🏗️ Architecture
 
@@ -237,10 +188,8 @@ Build GPU provider applications:
 ### SDK Distribution
 
 ```
-glin-sdk/ (Monorepo)
-├── packages/js/      ──▶  npm publish  ──▶  @glin-ai/sdk
-├── packages/python/  ──▶  twine upload ──▶  glin-sdk (PyPI)
-└── packages/rust/    ──▶  cargo publish ──▶ glin-sdk (crates.io)
+glin-sdk/
+└── packages/js/  ──▶  npm publish  ──▶  @glin-ai/sdk
 ```
 
 ## 📚 Documentation

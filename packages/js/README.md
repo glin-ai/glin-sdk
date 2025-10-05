@@ -1,6 +1,14 @@
-# @glin-ai/sdk
+<div align="center">
+  <img src="https://raw.githubusercontent.com/glin-ai/glin-sdk/main/assets/glin-coin.svg" alt="GLIN Logo" width="100" height="100">
+
+  # @glin-ai/sdk
 
 Official JavaScript/TypeScript SDK for the GLIN AI Training Network.
+
+[![npm version](https://img.shields.io/npm/v/@glin-ai/sdk.svg)](https://www.npmjs.com/package/@glin-ai/sdk)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
+
+</div>
 
 ## Installation
 
