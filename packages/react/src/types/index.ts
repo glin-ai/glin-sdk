@@ -1,4 +1,5 @@
 import type { GlinAccount, GlinClient, GlinAuth } from "@glin-ai/sdk"
+import type { WalletError } from "../errors/WalletErrors"
 
 /**
  * Configuration for GlinProvider
@@ -10,6 +11,10 @@ export interface GlinConfig {
   appName?: string
   /** Auto-connect on mount */
   autoConnect?: boolean
+  /** Enable debug logging */
+  debug?: boolean
+  /** Callback for auto-connect failures */
+  onAutoConnectFailed?: (error: WalletError) => void
 }
 
 /**

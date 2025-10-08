@@ -1,6 +1,6 @@
 {
   "name": "@glin-ai/sdk-react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React hooks and components for GLIN SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

@@ -47,3 +47,16 @@ export type {
   TransactionState,
   GlinContextState,
 } from "./types"
+
+// Error Classes
+export {
+  WalletError,
+  WalletLockedError,
+  WalletNotFoundError,
+  WalletConnectionRejectedError,
+  NetworkError,
+  BalanceFetchError,
+} from "./errors/WalletErrors"
+
+// Error Utilities
+export { classifyError } from "./utils/classifyError"

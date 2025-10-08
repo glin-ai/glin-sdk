@@ -10,6 +10,7 @@ import {
   getCurrentAuthInstance,
   getCurrentClientInstance,
 } from "../utils/singleton"
+import { classifyError } from "../utils/classifyError"
 
 /**
  * Internal store state
@@ -104,13 +105,27 @@ export function GlinProvider({ children, config = {} }: GlinProviderProps) {
       // Fetch balance
       await refreshBalance()
     } catch (error) {
-      const err = error instanceof Error ? error : new Error("Failed to connect wallet")
+      // Classify error for better handling
+      const classifiedError = classifyError(
+        error instanceof Error ? error : new Error("Failed to connect wallet")
+      )
+
       setWallet({
-        error: err,
+        error: classifiedError,
         isConnecting: false,
         isConnected: false,
       })
-      throw err
+
+      // Log for debugging (optional based on config)
+      if (config.debug) {
+        console.error("[GLIN SDK] Connection failed:", {
+          code: classifiedError.code,
+          message: classifiedError.message,
+          originalError: error,
+        })
+      }
+
+      throw classifiedError
     }
   }
 
@@ -169,11 +184,24 @@ export function GlinProvider({ children, config = {} }: GlinProviderProps) {
         error: null,
       })
     } catch (error) {
-      const err = error instanceof Error ? error : new Error("Failed to fetch balance")
+      // Classify error for better handling
+      const classifiedError = classifyError(
+        error instanceof Error ? error : new Error("Failed to fetch balance")
+      )
+
       setBalance({
         isLoading: false,
-        error: err,
+        error: classifiedError,
       })
+
+      // Log for debugging
+      if (config.debug) {
+        console.error("[GLIN SDK] Balance fetch failed:", {
+          code: classifiedError.code,
+          message: classifiedError.message,
+          originalError: error,
+        })
+      }
     }
   }
 
@@ -203,7 +231,22 @@ export function GlinProvider({ children, config = {} }: GlinProviderProps) {
   useEffect(() => {
     if (config.autoConnect && typeof window !== "undefined") {
       connect().catch((err) => {
-        console.error("Auto-connect failed:", err)
+        // Classify error for better handling
+        const classifiedError = classifyError(err instanceof Error ? err : new Error("Auto-connect failed"))
+
+        console.error("[GLIN SDK] Auto-connect failed:", classifiedError.message)
+
+        // Set error state for UI
+        setWallet({
+          error: classifiedError,
+          isConnecting: false,
+          isConnected: false,
+        })
+
+        // Call error callback if provided
+        if (config.onAutoConnectFailed) {
+          config.onAutoConnectFailed(classifiedError)
+        }
       })
     }
   }, [config.autoConnect])
